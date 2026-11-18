@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>સર્વે ડેશબોર્ડ</title>
+<style>
+:root{--bg:#f3f6f1;--ink:#1d2b22;--g:#1f6b4a;--g2:#e1efe6;--line:#d3ded6;--card:#fff;--mut:#5b6b60;--warn:#b45309}
+@media(prefers-color-scheme:dark){:root{--bg:#121a15;--ink:#e6efe8;--g:#4cc38a;--g2:#1c2d23;--line:#2d3d33;--card:#1a251e;--mut:#9fb2a6;--warn:#f59e0b}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 "Noto Sans Gujarati","Shruti",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--g);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{font-size:19px;margin:0}header span{font-size:13px;opacity:.9}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:26px;color:var(--g);line-height:1.2}.kpi small{color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+input,select,button{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+button{cursor:pointer}button.b{background:var(--g);color:var(--bg);border-color:var(--g);font-weight:600}
+@media(prefers-color-scheme:light){button.b{color:#fff}}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.row label{display:block;font-size:12px;color:var(--mut)}
+.bar{display:grid;grid-template-columns:minmax(80px,38%) 1fr auto;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.bar i{display:block;height:14px;border-radius:7px;background:var(--g)}.bar span{background:var(--g2);border-radius:7px;display:block}
+.bar em{font-style:normal;color:var(--mut);font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:600}
+.msg{color:var(--mut);font-size:13px;margin-top:8px}.warn{color:var(--warn)}
+#lg{max-width:360px;margin:12vh auto;padding:0 16px}#lg input{width:100%;margin:6px 0}
+.ph img{max-width:100%;border-radius:8px;border:1px solid var(--line)}
+#ov{position:fixed;inset:0;background:var(--bg);overflow:auto;padding:14px;z-index:9}#ov .in{max-width:760px;margin:0 auto}
+.hide{display:none}
+</style></head><body>
+<div id="lg"><div class="card"><h2>એડમિન લૉગિન</h2>
+<input id="lu" placeholder="એડમિન ID" autocapitalize="off"><input id="lp" type="password" placeholder="પાસવર્ડ">
+<button class="b" id="lgb" style="width:100%">લૉગિન</button><p class="msg warn" id="lm"></p></div></div>
+
+<div id="app" class="hide">
+<header><h1>📊 બેઝ લાઈન સર્વે — ડેશબોર્ડ</h1><span id="who"></span></header>
+<main>
+ <div class="kpis" id="kpis"></div>
+
+ <div class="card"><h2>⬇ Excel ડાઉનલોડ</h2>
+  <div class="row">
+   <div><label>જિલ્લો</label><select id="fd"><option value="">બધા</option></select></div>
+   <div><label>તાલુકો</label><select id="ft"><option value="">બધા</option></select></div>
+   <div><label>સર્વેયર</label><select id="fs"><option value="">બધા</option></select></div>
+   <div><label>તારીખથી</label><input type="date" id="f1"></div>
+   <div><label>તારીખ સુધી</label><input type="date" id="f2"></div>
+   <button class="b" id="xl">Excel ડાઉનલોડ</button>
+   <button id="xd">ડુપ્લિકેટ મોબાઈલ</button>
+  </div>
+  <p class="msg" id="xm">ફિલ્ટર પસંદ કરો અથવા ખાલી રાખો (બધી નોંધ). 40,000 થી વધુ નોંધ હોય તો ફાઇલ ભાગોમાં (part1, part2…) આવશે.</p>
+ </div>
+
+ <div class="grid">
+  <div class="card"><h2>છેલ્લા 30 દિવસ — દૈનિક નોંધ</h2><div id="daily"></div></div>
+  <div class="card"><h2>સર્વેયર પ્રમાણે</h2><div id="bysv" style="max-height:300px;overflow:auto"></div></div>
+  <div class="card"><h2>તાલુકા પ્રમાણે</h2><div id="bytal" style="max-height:300px;overflow:auto"></div></div>
+  <div class="card"><h2>જાતિ પ્રમાણે</h2><div id="bycaste"></div></div>
+  <div class="card"><h2>આવાસની સ્થિતિ</h2><div id="byhouse"></div></div>
+  <div class="card"><h2>આવકનો સ્ત્રોત</h2><div id="bysrc"></div></div>
+ </div>
+
+ <div class="card"><h2>🔎 નોંધ શોધો (નામ / મોબાઈલ / સર્વે ID)</h2>
+  <div class="row"><input id="q" placeholder="શોધો…" style="flex:1;min-width:200px"><button class="b" id="qb">શોધો</button></div>
+  <div id="qr" style="margin-top:10px;overflow:auto"></div></div>
+</main></div>
+<div id="ov" class="hide"></div>
+
+<script src="config.js"></script><script src="xlsx.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),CFG=window.CFG;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let SESS=null;
+async function api(path,opt={}){
+ const r=await fetch(CFG.url+path,{...opt,headers:{apikey:CFG.key,Authorization:"Bearer "+SESS.access_token,"Content-Type":"application/json",...(opt.headers||{})}});
+ if(!r.ok)throw new Error(path.split("?")[0]+" → "+r.status+" "+(await r.text()).slice(0,120));
+ return opt.raw?r:r.json();
+}
+$("#lgb").onclick=async()=>{
+ let u=$("#lu").value.trim().toLowerCase();if(!u.includes("@"))u+="@halpati.survey";$("#lm").textContent="…";
+ try{
+  const r=await fetch(CFG.url+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:CFG.key,"Content-Type":"application/json"},body:JSON.stringify({email:u,password:$("#lp").value})});
+  const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||r.status);
+  SESS=j;const p=await api("/rest/v1/surveyors?select=code,name,is_admin&user_id=eq."+j.user.id);
+  if(!p[0]||!p[0].is_admin)throw new Error("આ ID એડમિન નથી");
+  $("#who").textContent=p[0].name;$("#lg").classList.add("hide");$("#app").classList.remove("hide");load();
+ }catch(e){$("#lm").textContent=e.message}
+};
+const bars=(a,key,label,max)=>{const m=Math.max(1,...a.map(x=>x.n));return a.length?a.map(x=>`<div class="bar"><b style="font-weight:500">${esc(label(x))}</b><span><i style="width:${Math.max(2,x.n/m*100)}%"></i></span><em>${x.n.toLocaleString("en-IN")}</em></div>`).join(""):'<p class="msg">હજી ડેટા નથી</p>'};
+let ST=null;
+async function load(){
+ ST=await api("/rest/v1/rpc/admin_stats",{method:"POST",body:"{}"});
+ const n=v=>(+v||0).toLocaleString("en-IN");
+ $("#kpis").innerHTML=[["કુલ નોંધ",n(ST.total)],["આજની નોંધ",n(ST.today)],["ગામ",n(ST.villages)],["સર્વેયર",n(ST.by_surveyor.length)],["આવાસ માટે પાત્ર",n(ST.eligible_yes)],["સરેરાશ આવક ₹",n(ST.income_avg)],["કુલ ફોટા",n(ST.photos)],["ડુપ્લિકેટ મોબાઈલ",`<span class="${ST.dup_mobile?"warn":""}">${n(ST.dup_mobile)}</span>`]].map(([k,v])=>`<div class="kpi"><b>${v}</b><small>${k}</small></div>`).join("");
+ // daily svg
+ const days=[];for(let i=29;i>=0;i--){const d=new Date(Date.now()-i*864e5+330*6e4).toISOString().slice(0,10);days.push({d,n:(ST.daily.find(x=>x.d===d)||{}).n||0})}
+ const mx=Math.max(1,...days.map(x=>x.n));
+ $("#daily").innerHTML=`<svg viewBox="0 0 300 110" style="width:100%"><g>${days.map((x,i)=>`<rect x="${i*10+1}" y="${95-x.n/mx*85}" width="8" height="${x.n/mx*85}" rx="2" fill="var(--g)"><title>${x.d}: ${x.n}</title></rect>`).join("")}</g><text x="0" y="107" font-size="8" fill="var(--mut)">${days[0].d.slice(5)}</text><text x="300" y="107" font-size="8" text-anchor="end" fill="var(--mut)">${days[29].d.slice(5)} · max ${mx}</text></svg>`;
+ $("#bysv").innerHTML=`<table><tr><th>ID</th><th>નામ</th><th>નોંધ</th><th>છેલ્લી તારીખ</th></tr>${ST.by_surveyor.map(x=>`<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${x.n}</td><td>${esc(x.last||"")}</td></tr>`).join("")}</table>`;
+ $("#bytal").innerHTML=bars(ST.by_taluka,"",x=>(x.taluka||"—")+(x.district?" · "+x.district:""));
+ $("#bycaste").innerHTML=bars(ST.by_caste,"",x=>x.k);$("#byhouse").innerHTML=bars(ST.by_house,"",x=>x.k);$("#bysrc").innerHTML=bars(ST.by_src,"",x=>x.k);
+ const ds=[...new Set(ST.by_taluka.map(x=>x.district).filter(Boolean))];
+ $("#fd").innerHTML='<option value="">બધા</option>'+ds.map(x=>`<option>${esc(x)}</option>`).join("");
+ fillT();
+ $("#fs").innerHTML='<option value="">બધા</option>'+ST.by_surveyor.map(x=>`<option value="${esc(x.code)}">${esc(x.code)} · ${esc(x.name)}</option>`).join("");
+}
+function fillT(){const d=$("#fd").value;$("#ft").innerHTML='<option value="">બધા</option>'+[...new Set(ST.by_taluka.filter(x=>!d||x.district===d).map(x=>x.taluka).filter(Boolean))].map(x=>`<option>${esc(x)}</option>`).join("")}
+$("#fd").onchange=fillT;
+
+// ---- Excel ----
+const yn=(p,k)=>p&&p[k]?"હા":"ના";
+const COLS=[["ક્રમ",(r,i)=>i],["સર્વે ID",r=>r.survey_id],["સર્વે તારીખ",r=>r.survey_date],["સર્વેયર ID",r=>r.surveyor_code],["સર્વેયર",r=>r.surveyor_name],["સર્વેયર મોબાઈલ",r=>r.surveyor_mobile],
+["લાભાર્થીનું નામ",r=>r.name],["મોબાઈલ",r=>r.mobile],["પુરુષ",r=>r.male],["સ્ત્રી",r=>r.female],["કુલ સભ્ય",r=>r.total],["જાતિ",r=>r.caste],["સંમતિ",r=>r.consent],
+["જિલ્લો",r=>r.district],["તાલુકો",r=>r.taluka],["ગામ",r=>r.village],["આવાસની સ્થિતિ",r=>r.house],["કાચા આવાસનું વર્ણન",r=>(r.kacha||[]).join(", ")],
+["જર્જરિત-વર્ષ",r=>r.dil_year],["જર્જરિત-યોજના",r=>r.dil_scheme],["આવાસ માલિકી",r=>r.own],["જમીન માલિકી",r=>r.land_type],["ક્ષેત્રફળ/કેવી રીતે",r=>r.land_area],
+["પાત્રતા",r=>r.elig],["પાત્રતા-કેવી રીતે",r=>r.elig_why],["વાર્ષિક આવક",r=>r.income],["આવકનો સ્ત્રોત",r=>[...(r.src||[]).filter(x=>x!=="અન્ય"),r.src_other].filter(Boolean).join(", ")],
+["અન્ય યોજના/લાભ",r=>r.other],["કઈ યોજના",r=>r.other_why],["મિલકત-આગળ",r=>r.prop_front],["મિલકત-પાછળ",r=>r.prop_back],["મિલકત-ડાબી બાજુ",r=>r.prop_left],["મિલકત-જમણી બાજુ",r=>r.prop_right],
+["જાતિ પ્રમાણપત્ર",r=>r.castecert],["આવક પ્રમાણપત્ર",r=>r.inccert],["Latitude",r=>r.gps_lat],["Longitude",r=>r.gps_lng],["નકશો",r=>r.gps_lat!=null?`https://maps.google.com/?q=${r.gps_lat},${r.gps_lng}`:""],
+["ફોટા (સંખ્યા)",r=>r.photo_count],["રેશનકાર્ડ ફોટો",r=>yn(r.photos,"ration")],["ઇલેક્શન કાર્ડ ફોટો",r=>yn(r.photos,"elect")],["આધારકાર્ડ ફોટો",r=>yn(r.photos,"aadhar")],
+["સંમતિ પત્રક ફોટો",r=>yn(r.photos,"samadhi")],["આકારણી ફોટો",r=>yn(r.photos,"akarani")],["સ્થળનો ફોટો",r=>yn(r.photos,"gps_photo")],["જર્જરિત હુકમ ફોટો",r=>yn(r.photos,"dil_doc")],
+["સર્વર પર ક્યારે",r=>r.synced_at?new Date(r.synced_at).toLocaleString("en-IN"):""]];
+const SEL="uid,survey_id,survey_date,surveyor_code,surveyor_name,surveyor_mobile,name,mobile,male,female,total,caste,consent,district,taluka,village,house,kacha,dil_year,dil_scheme,own,land_type,land_area,elig,elig_why,income,src,src_other,prop_front,prop_back,prop_left,prop_right,castecert,inccert,gps_lat,gps_lng,photos,photo_count,synced_at";
+const filt=()=>{const p=[],f=(k,v)=>v&&p.push(k+"=eq."+encodeURIComponent(v));f("district",$("#fd").value);f("taluka",$("#ft").value);f("surveyor_code",$("#fs").value);
+ if($("#f1").value)p.push("survey_date=gte."+$("#f1").value);if($("#f2").value)p.push("survey_date=lte."+$("#f2").value);return p.join("&")};
+async function exportRows(table,q,fname){
+ const m=$("#xm");m.textContent="ગણતરી…";
+ const c=await api(`/rest/v1/${table}?select=uid${q?"&"+q:""}`,{method:"HEAD",raw:true,headers:{Prefer:"count=exact",Range:"0-0","Range-Unit":"items"}});
+ const total=+(c.headers.get("content-range")||"*/0").split("/")[1]||0;
+ if(!total){m.textContent="આ ફિલ્ટરમાં કોઈ નોંધ નથી";return}
+ const PART=40000;let part=1,rows=[],got=0;
+ const flush=()=>{const data=rows.map((r,i)=>{const o={};COLS.forEach(([h,f])=>o[h]=f(r,got-rows.length+i+1));return o});
+  const ws=XLSX.utils.json_to_sheet(data);ws["!cols"]=COLS.map(([h])=>({wch:Math.max(10,Math.min(28,h.length+6))}));ws["!freeze"]={xSplit:0,ySplit:1};
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Survey");
+  const name=`${fname}${total>PART?"-part"+part:""}-${new Date().toISOString().slice(0,10)}.xlsx`;XLSX.writeFile(wb,name);part++;rows=[]};
+ for(let o=0;o<total;o+=1000){
+  m.textContent=`ડેટા લાવી રહ્યા છીએ… ${got.toLocaleString("en-IN")} / ${total.toLocaleString("en-IN")}`;
+  const a=await api(`/rest/v1/${table}?select=${SEL}${q?"&"+q:""}&order=survey_date.asc,uid.asc&limit=1000&offset=${o}`);
+  rows.push(...a);got+=a.length;if(rows.length>=PART)flush();
+ }
+ if(rows.length)flush();
+ m.textContent=`✔ ${total.toLocaleString("en-IN")} નોંધ ડાઉનલોડ થઈ`;
+}
+$("#xl").onclick=()=>exportRows("surveys",filt(),"halpati-survey").catch(e=>$("#xm").textContent="ભૂલ: "+e.message);
+$("#xd").onclick=()=>exportRows("v_dup_mobile","","halpati-duplicate-mobile").catch(e=>$("#xm").textContent="ભૂલ: "+e.message);
+
+// ---- search + view ----
+$("#qb").onclick=async()=>{
+ const q=$("#q").value.trim().replace(/[*,()]/g,"");if(!q)return;
+ try{const a=await api(`/rest/v1/surveys?select=uid,survey_id,name,mobile,village,taluka,surveyor_code,survey_date&or=(name.ilike.*${encodeURIComponent(q)}*,mobile.ilike.*${encodeURIComponent(q)}*,survey_id.ilike.*${encodeURIComponent(q)}*)&order=synced_at.desc&limit=50`);
+  $("#qr").innerHTML=a.length?`<table><tr><th>સર્વે ID</th><th>નામ</th><th>મોબાઈલ</th><th>ગામ</th><th>તારીખ</th><th></th></tr>${a.map(r=>`<tr><td>${esc(r.survey_id)}</td><td>${esc(r.name)}</td><td>${esc(r.mobile)}</td><td>${esc(r.village)} ${esc(r.taluka)}</td><td>${esc(r.survey_date)}</td><td><button onclick="view('${r.uid}')">જુઓ</button></td></tr>`).join("")}</table>`:'<p class="msg">કંઈ મળ્યું નહીં</p>'}
+ catch(e){$("#qr").innerHTML='<p class="msg warn">'+esc(e.message)+'</p>'}
+};
+$("#q").onkeydown=e=>{if(e.key==="Enter")$("#qb").click()};
+const PL={ration:"રેશનકાર્ડ",elect:"ઇલેક્શન કાર્ડ",aadhar:"આધારકાર્ડ",samadhi:"સંમતિ પત્રક",akarani:"આકારણી",gps_photo:"સ્થળનો ફોટો",dil_doc:"જર્જરિત આવાસ - મંજૂરીનો હુકમ",castecert_doc:"જાતિ પ્રમાણપત્ર",inccert_doc:"આવકનું પ્રમાણપત્ર"};
+window.view=async uid=>{
+ const r=(await api(`/rest/v1/surveys?select=*&uid=eq.${uid}`))[0],ov=$("#ov");
+ const rows=COLS.slice(1,36).map(([h,f])=>[h,f(r,0)]).filter(x=>x[1]!==""&&x[1]!=null);
+ ov.innerHTML=`<div class="in"><button class="b" onclick="$('#ov').classList.add('hide')">← પાછા</button><h2>${esc(r.name)} <small>${esc(r.survey_id)}</small></h2>
+ <table>${rows.map(([h,v])=>`<tr><th>${esc(h)}</th><td>${esc(v)}</td></tr>`).join("")}</table><div id="phs">ફોટા લાવી રહ્યા છીએ…</div></div>`;
+ ov.classList.remove("hide");
+ const out=[];
+ for(const [k,p] of Object.entries(r.photos||{})){
+  try{const s=await api(`/storage/v1/object/sign/survey-photos/${p}`,{method:"POST",body:JSON.stringify({expiresIn:3600})});
+   const u=CFG.url+"/storage/v1"+s.signedURL;out.push(`<div class="ph"><h3>${PL[k]||k}</h3><img src="${u}"><br><a href="${u}" download>⬇ ડાઉનલોડ</a></div>`)}catch(e){out.push(`<p class="warn">${PL[k]||k}: ${esc(e.message)}</p>`)}
+ }
+ $("#phs").innerHTML=out.join("")||"<p class='msg'>કોઈ ફોટો નથી</p>";
+};
+</script></body></html>
