@@ -53,17 +53,14 @@ select id, 'ADMIN', 'Dhairya', true from auth.users where email = 'admin@halpati
 ```
 
 ==============================================================
-STEP 3 – Create SURVEYOR logins (repeat for every surveyor)
+STEP 3 - Surveyors create their OWN login (no SQL, nothing to add on GitHub)
 ==============================================================
-1. Authentication -> Users -> Add user: email `s001@halpati.survey`, a password, tick Auto Confirm.
-2. SQL Editor, Run (change S001, name and email each time):
-```
-insert into public.surveyors (user_id, code, name, is_admin)
-select id, 'S001', 'Ramesh Patel', false from auth.users where email = 's001@halpati.survey';
-```
-The surveyor logs in only with `S001` and the password (the @halpati.survey part is added by the app).
-The code (S001) becomes part of every Survey ID, so IDs never repeat between surveyors.
-
+1. The SQL file already contains the self-registration part at the end. Your secret registration code is HALPATI-2026
+   (to change it: SQL Editor -> update public.app_settings set value='YOUR-CODE' where key='reg_code';)
+2. Give each surveyor: the app link + the registration code.
+3. Surveyor opens the link (with internet) -> green bar -> "login" -> "નવા સર્વેયર? અહીં રજિસ્ટર કરો" -> writes name, mobile number, a password and the code -> done.
+   The mobile number is the login ID. The app gives a surveyor number (S101, S102 ...) automatically; it goes into every Survey ID.
+4. Later logins: mobile number + password.
 ==============================================================
 STEP 4 – Put your Supabase key in config.js
 ==============================================================

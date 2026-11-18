@@ -256,8 +256,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   </main>
 </div>
 <div id="lg" class="lgov" hidden><div class="lgin"><h2>સર્વેયર લૉગિન</h2><p class="note">સર્વર પર ડેટા સિંક કરવા માટે. પહેલી વાર ઈન્ટરનેટ જોઈએ; લૉગિન વગર પણ એન્ટ્રી ફોન પર સેવ થાય છે.</p>
-<input type="text" id="lu" placeholder="સર્વેયર ID (ઉદા. S001)" autocapitalize="off" autocomplete="username" style="margin-bottom:8px"><input type="password" id="lp" placeholder="પાસવર્ડ" autocomplete="current-password">
-<div class="actions" style="margin-top:10px"><button class="btn" id="lgb" type="button">લૉગિન</button><button class="btn ghost" id="lgx" type="button">પછી</button></div><p class="msg" id="lm" style="margin-top:8px"></p></div></div>
+<input type="text" id="lu" placeholder="લૉગિન ID (તમારો મોબાઈલ નંબર)" autocapitalize="off" autocomplete="username" style="margin-bottom:8px"><input type="password" id="lp" placeholder="પાસવર્ડ" autocomplete="current-password">
+<div id="lgReg" hidden style="margin-top:8px"><input type="text" id="rn" placeholder="તમારું પૂરું નામ" style="margin-bottom:8px"><input type="tel" id="rm" placeholder="તમારો મોબાઈલ નંબર (10 અંક) — આ જ તમારો લૉગિન ID" maxlength="10" inputmode="numeric" style="margin-bottom:8px"><input type="password" id="rp" placeholder="નવો પાસવર્ડ (ઓછામાં ઓછા 6 અક્ષર)" autocomplete="new-password" style="margin-bottom:8px"><input type="text" id="rc" placeholder="રજિસ્ટ્રેશન કોડ (એડમિન પાસેથી મેળવો)" autocapitalize="characters"></div>
+<div class="actions" style="margin-top:10px"><button class="btn" id="lgb" type="button">લૉગિન</button><button class="btn ghost" id="lgx" type="button">પછી</button></div><p style="margin-top:10px;text-align:center"><a href="#" id="lgTog" style="color:var(--g,#1D6A55);font-weight:600">નવા સર્વેયર? અહીં રજિસ્ટર કરો</a></p><p class="msg" id="lm" style="margin-top:8px"></p></div></div>
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>/* xlsx-js-style 1.2.0-beta @ 2022-04-05T01:40:40.843Z */
@@ -1388,17 +1389,37 @@ function updSync(){
   el.className=cls; tx.textContent=t;
 }
 function showLogin(){ $('lg').hidden=false; $('lm').textContent=''; }
+let regMode=false;
+function setRegMode(on){ regMode=on; $('lgReg').hidden=!on; $('lu').hidden=on; $('lp').hidden=on; $('lgb').textContent=on?'રજિસ્ટર કરો':'લૉગિન'; $('lgTog').textContent=on?'પહેલેથી રજિસ્ટર છે? લૉગિન કરો':'નવા સર્વેયર? અહીં રજિસ્ટર કરો'; $('lm').textContent=''; }
+async function doRegister(){
+  const n=$('rn').value.trim(), m=$('rm').value.replace(/\D/g,''), p=$('rp').value, c=$('rc').value.trim();
+  if(n.length<2){ $('lm').textContent='નામ લખો'; return; }
+  if(m.length!==10){ $('lm').textContent='10 અંકનો મોબાઈલ નંબર લખો'; return; }
+  if(p.length<6){ $('lm').textContent='પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો રાખો'; return; }
+  if(!c){ $('lm').textContent='રજિસ્ટ્રેશન કોડ લખો'; return; }
+  if(!navigator.onLine){ $('lm').textContent='રજિસ્ટર માટે ઈન્ટરનેટ જોઈએ'; return; }
+  $('lm').textContent='…';
+  try{
+    await authReq('/auth/v1/signup',{email:m+'@halpati.survey',password:p,data:{reg:'surveyor',name:n,mobile:m,reg_code:c}});
+  }catch(e){
+    const t=String(e.message||''); 
+    $('lm').textContent=/already|registered|exists/i.test(t)?'આ મોબાઈલ નંબર પહેલેથી રજિસ્ટર છે — લૉગિન કરો':(/WRONG_REG_CODE|Database error/i.test(t)?'રજિસ્ટ્રેશન કોડ ખોટો છે':('રજિસ્ટર ન થયું: '+t)); return;
+  }
+  $('lu').value=m; $('lp').value=p; $('rp').value=''; setRegMode(false); $('lm').textContent='✔ રજિસ્ટર થયું, લૉગિન થઈ રહ્યું છે…';
+  await doLogin();
+}
 async function doLogin(){
   let u=$('lu').value.trim().toLowerCase(); const p=$('lp').value; if(!u||!p) return;
   if(u.indexOf('@')<0) u+='@halpati.survey'; $('lm').textContent='…';
   try{
     const j=await authReq('/auth/v1/token?grant_type=password',{email:u,password:p}); keepSess(j);
-    const r=await fetch(CFG.url+'/rest/v1/surveyors?select=code,name,is_admin&user_id=eq.'+j.user.id,{headers:await H()}); const a=await r.json();
+    const r=await fetch(CFG.url+'/rest/v1/surveyors?select=code,name,mobile,is_admin&user_id=eq.'+j.user.id,{headers:await H()}); const a=await r.json();
     if(!Array.isArray(a)||!a.length){ lsSet('hb_sess',null); try{localStorage.removeItem('hb_sess');}catch(e){} $('lm').textContent='આ ID સર્વેયર તરીકે નોંધાયેલ નથી — એડમિનને કહો'; return; }
     const old=PROF();
     if(old&&old.code!==a[0].code&&entries.some(e=>!e.synced&&e.scode&&e.scode===old.code)){ try{localStorage.removeItem('hb_sess');}catch(e){} $('lm').textContent='આ ફોનમાં બીજા સર્વેયરની સિંક ન થયેલી એન્ટ્રી છે ('+old.code+'). પહેલા તે જ ID થી સિંક કરો.'; return; }
     lsSet('hb_prof',a[0]); $('lg').hidden=true; $('lp').value='';
     if(!$('f_surveyor').value&&a[0].name) setVal('surveyor',a[0].name);
+    if(!$('f_surveyor_mobile').value&&a[0].mobile) setVal('surveyor_mobile',a[0].mobile);
     updSync(); sync(true);
   }catch(e){ $('lm').textContent=navigator.onLine?('લૉગિન ન થયું: '+e.message):'લૉગિન માટે ઈન્ટરનેટ જોઈએ'; }
 }
@@ -1462,7 +1483,7 @@ async function sync(manual){
 }
 function startSync(){
   $('syncBtn').addEventListener('click',()=>{ if(!SS()||!PROF()) showLogin(); else sync(true); });
-  $('lgb').addEventListener('click',doLogin); $('lgx').addEventListener('click',()=>{ $('lg').hidden=true; });
+  $('lgb').addEventListener('click',()=>{ regMode?doRegister():doLogin(); }); $('lgTog').addEventListener('click',ev=>{ ev.preventDefault(); setRegMode(!regMode); }); $('lgx').addEventListener('click',()=>{ $('lg').hidden=true; });
   $('lp').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
   $('srvSync').addEventListener('click',()=>{ if(!SS()||!PROF()) showLogin(); else sync(true); });
   window.addEventListener('online',()=>sync());

@@ -146,3 +146,36 @@ alter table public.surveys add column if not exists surveyor_mobile text;
 -- added later: relation to family head (for consent = હા)
 alter table public.surveys add column if not exists consent_rel text;
 alter table public.surveys add column if not exists dil text;
+
+-- =====================================================================
+--  SELF-REGISTRATION: surveyors create their own login in the app (no SQL per surveyor)
+--  Safe to run again. Change 'HALPATI-2026' below to your own secret code and give it ONLY to your surveyors.
+-- =====================================================================
+alter table public.surveyors add column if not exists mobile text;
+
+create table if not exists public.app_settings (key text primary key, value text);
+alter table public.app_settings enable row level security;   -- no policy = nobody can read it from the app
+insert into public.app_settings (key, value) values ('reg_code', 'HALPATI-2026') on conflict (key) do nothing;
+
+create sequence if not exists public.surveyor_seq start 101;
+
+create or replace function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare okc text;
+begin
+  if coalesce(new.raw_user_meta_data->>'reg','') = 'surveyor' then
+    select value into okc from public.app_settings where key = 'reg_code';
+    if okc is null or coalesce(new.raw_user_meta_data->>'reg_code','') <> okc then
+      raise exception 'WRONG_REG_CODE';
+    end if;
+    insert into public.surveyors (user_id, code, name, is_admin, mobile)
+    values (new.id, 'S' || nextval('public.surveyor_seq'),
+            coalesce(nullif(new.raw_user_meta_data->>'name',''), 'Surveyor'), false,
+            new.raw_user_meta_data->>'mobile');
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users
+for each row execute function public.handle_new_user();
