@@ -110,13 +110,13 @@ STEP 8 – You: admin dashboard + Excel
 STEP 9 – Village names (DONE - already inside the app)
 ==============================================================
 Your list (3,490 villages, 8 districts, 57 talukas) is built into index.html. Nothing to import.
-Names are in English exactly as in your Excel (ALL CAPS changed to Capital Letters). 2 repeated names in the same taluka were merged.
+Village names are written in Gujarati (made from the English names in your Excel by transliteration - spelling can differ from local usage, so please check and tell me corrections). Repeated names in the same taluka were merged.
 Surat city areas (Adajan, Katargam, Majura, Puna, Udhana) are shown together under "સુરત સિટી". "પલસાણા" taluka was added.
 If a village is missing, surveyors choose "➕ યાદીમાં નથી" and type it.
 
 ==============================================================
 Updating the app later
 ==============================================================
-Upload the new index.html on GitHub (replace), and in `sw.js` change `halpati-v3` to `halpati-v4` (then v5 ...). Phones update when opened with internet.
+Upload the new index.html on GitHub (replace), and in `sw.js` change `halpati-v4` to `halpati-v5` (then v6 ...). Phones update when opened with internet.
 
 PRIVACY: Aadhaar / ration card photos are private on the server - only logged-in surveyors (their own entries) and admin can see them. Keep the admin password safe, never share the service_role key.

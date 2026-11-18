@@ -37,10 +37,11 @@ create table if not exists public.surveys (
   male int, female int, total int,
   caste        text,
   consent      text,
+  consent_rel  text,
   district     text, taluka text, village text,
   house        text,
   kacha        text[],
-  dil_year     text, dil_scheme text,
+  dil          text, dil_year text, dil_scheme text,
   own          text,
   land_type    text, land_area text,
   elig         text, elig_why text,
@@ -141,3 +142,7 @@ grant execute on function public.admin_stats() to authenticated;
 
 -- If you ran an earlier version of this file, run this line once more (safe to repeat):
 alter table public.surveys add column if not exists surveyor_mobile text;
+
+-- added later: relation to family head (for consent = હા)
+alter table public.surveys add column if not exists consent_rel text;
+alter table public.surveys add column if not exists dil text;

@@ -1,5 +1,5 @@
 // Offline copy of the survey form. Change V when you upload a new index.html so phones pick up the update.
-const V="halpati-v3",FILES=["./","index.html","config.js","manifest.json","icon-192.png","icon-512.png"];
+const V="halpati-v4",FILES=["./","index.html","config.js","manifest.json","icon-192.png","icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",e=>{

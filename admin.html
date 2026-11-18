@@ -109,16 +109,16 @@ $("#fd").onchange=fillT;
 // ---- Excel ----
 const yn=(p,k)=>p&&p[k]?"હા":"ના";
 const COLS=[["ક્રમ",(r,i)=>i],["સર્વે ID",r=>r.survey_id],["સર્વે તારીખ",r=>r.survey_date],["સર્વેયર ID",r=>r.surveyor_code],["સર્વેયર",r=>r.surveyor_name],["સર્વેયર મોબાઈલ",r=>r.surveyor_mobile],
-["લાભાર્થીનું નામ",r=>r.name],["મોબાઈલ",r=>r.mobile],["પુરુષ",r=>r.male],["સ્ત્રી",r=>r.female],["કુલ સભ્ય",r=>r.total],["જાતિ",r=>r.caste],["સંમતિ",r=>r.consent],
+["લાભાર્થીનું નામ",r=>r.name],["મોબાઈલ",r=>r.mobile],["પુરુષ",r=>r.male],["સ્ત્રી",r=>r.female],["કુલ સભ્ય",r=>r.total],["જાતિ",r=>r.caste],["સંમતિ",r=>r.consent],["વડા સાથેનો સંબંધ",r=>r.consent_rel],
 ["જિલ્લો",r=>r.district],["તાલુકો",r=>r.taluka],["ગામ",r=>r.village],["આવાસની સ્થિતિ",r=>r.house],["કાચા આવાસનું વર્ણન",r=>(r.kacha||[]).join(", ")],
 ["જર્જરિત-વર્ષ",r=>r.dil_year],["જર્જરિત-યોજના",r=>r.dil_scheme],["આવાસ માલિકી",r=>r.own],["જમીન માલિકી",r=>r.land_type],["ક્ષેત્રફળ/કેવી રીતે",r=>r.land_area],
 ["પાત્રતા",r=>r.elig],["પાત્રતા-કેવી રીતે",r=>r.elig_why],["વાર્ષિક આવક",r=>r.income],["આવકનો સ્ત્રોત",r=>[...(r.src||[]).filter(x=>x!=="અન્ય"),r.src_other].filter(Boolean).join(", ")],
 ["અન્ય યોજના/લાભ",r=>r.other],["કઈ યોજના",r=>r.other_why],["મિલકત-આગળ",r=>r.prop_front],["મિલકત-પાછળ",r=>r.prop_back],["મિલકત-ડાબી બાજુ",r=>r.prop_left],["મિલકત-જમણી બાજુ",r=>r.prop_right],
 ["જાતિ પ્રમાણપત્ર",r=>r.castecert],["આવક પ્રમાણપત્ર",r=>r.inccert],["Latitude",r=>r.gps_lat],["Longitude",r=>r.gps_lng],["નકશો",r=>r.gps_lat!=null?`https://maps.google.com/?q=${r.gps_lat},${r.gps_lng}`:""],
 ["ફોટા (સંખ્યા)",r=>r.photo_count],["રેશનકાર્ડ ફોટો",r=>yn(r.photos,"ration")],["ઇલેક્શન કાર્ડ ફોટો",r=>yn(r.photos,"elect")],["આધારકાર્ડ ફોટો",r=>yn(r.photos,"aadhar")],
-["સંમતિ પત્રક ફોટો",r=>yn(r.photos,"samadhi")],["આકારણી ફોટો",r=>yn(r.photos,"akarani")],["સ્થળનો ફોટો",r=>yn(r.photos,"gps_photo")],["જર્જરિત હુકમ ફોટો",r=>yn(r.photos,"dil_doc")],
+["સંમતિ પત્રક ફોટો",r=>yn(r.photos,"samadhi")],["કુટુંબ સંમતિ પત્રક ફોટો",r=>yn(r.photos,"consent_doc")],["આકારણી ફોટો",r=>yn(r.photos,"akarani")],["સ્થળનો ફોટો",r=>yn(r.photos,"gps_photo")],["જર્જરિત આવાસ",r=>r.dil],["જર્જરિત હુકમ ફોટો",r=>yn(r.photos,"dil_doc")],
 ["સર્વર પર ક્યારે",r=>r.synced_at?new Date(r.synced_at).toLocaleString("en-IN"):""]];
-const SEL="uid,survey_id,survey_date,surveyor_code,surveyor_name,surveyor_mobile,name,mobile,male,female,total,caste,consent,district,taluka,village,house,kacha,dil_year,dil_scheme,own,land_type,land_area,elig,elig_why,income,src,src_other,prop_front,prop_back,prop_left,prop_right,castecert,inccert,gps_lat,gps_lng,photos,photo_count,synced_at";
+const SEL="uid,survey_id,survey_date,surveyor_code,surveyor_name,surveyor_mobile,name,mobile,male,female,total,caste,consent,consent_rel,district,taluka,village,house,kacha,dil,dil_year,dil_scheme,own,land_type,land_area,elig,elig_why,income,src,src_other,prop_front,prop_back,prop_left,prop_right,castecert,inccert,gps_lat,gps_lng,photos,photo_count,synced_at";
 const filt=()=>{const p=[],f=(k,v)=>v&&p.push(k+"=eq."+encodeURIComponent(v));f("district",$("#fd").value);f("taluka",$("#ft").value);f("surveyor_code",$("#fs").value);
  if($("#f1").value)p.push("survey_date=gte."+$("#f1").value);if($("#f2").value)p.push("survey_date=lte."+$("#f2").value);return p.join("&")};
 async function exportRows(table,q,fname){
@@ -150,7 +150,7 @@ $("#qb").onclick=async()=>{
  catch(e){$("#qr").innerHTML='<p class="msg warn">'+esc(e.message)+'</p>'}
 };
 $("#q").onkeydown=e=>{if(e.key==="Enter")$("#qb").click()};
-const PL={ration:"રેશનકાર્ડ",elect:"ઇલેક્શન કાર્ડ",aadhar:"આધારકાર્ડ",samadhi:"સંમતિ પત્રક",akarani:"આકારણી",gps_photo:"સ્થળનો ફોટો",dil_doc:"જર્જરિત આવાસ - મંજૂરીનો હુકમ",castecert_doc:"જાતિ પ્રમાણપત્ર",inccert_doc:"આવકનું પ્રમાણપત્ર"};
+const PL={ration:"રેશનકાર્ડ",elect:"ઇલેક્શન કાર્ડ",aadhar:"આધારકાર્ડ",samadhi:"સંમતિ પત્રક",akarani:"આકારણી",gps_photo:"સ્થળનો ફોટો",dil_doc:"જર્જરિત આવાસ - મંજૂરીનો હુકમ",castecert_doc:"જાતિ પ્રમાણપત્ર",consent_doc:"કુટુંબ સંમતિ પત્રક",inccert_doc:"આવકનું પ્રમાણપત્ર"};
 window.view=async uid=>{
  const r=(await api(`/rest/v1/surveys?select=*&uid=eq.${uid}`))[0],ov=$("#ov");
  const rows=COLS.slice(1,36).map(([h,f])=>[h,f(r,0)]).filter(x=>x[1]!==""&&x[1]!=null);
